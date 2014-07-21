@@ -1,0 +1,73 @@
+@import "flex";
+
+$line-min-height: 90px;
+$line-max-height: 180px;
+
+//body {background: #f00;}
+//.flexboxlegacy body{background: #f60;}
+//.flexbox body{background: #f0f;} 
+
+
+.flex{
+  //basic styling
+  background: #ddd;
+  padding:5px;
+  //setup the flex-flow of the container
+  @include flexbox;
+  @include flex-direction(line);
+  @include flex-wrap(wrap);
+  @include justify-content(flex-start);
+}
+
+%flex-element{
+  margin: 5px;
+  background-color:#efefef;
+  background-size:cover;
+  
+  //generated content for aspect ratio 
+  position:relative;
+  &:before{
+    content:"";
+    display:block;
+  }
+}
+
+
+@mixin flex-element($width:1,$height:1){
+  //calculate the ratio
+  $ratio :   $width / $height ;
+  // class-name containing with and height
+  .flex-#{$width}by#{$height}{
+    @extend %flex-element;
+    
+    //flex grow set to ratio to defive the with of the element
+    @include flex-grow($ratio);
+
+    //flex-basis is needed to cause elements to wrap
+    @include flex-basis($line-min-height * $ratio);
+    
+    //restrict maximum scale to avoid giants
+    max-height:$line-max-height;
+    max-width: $line-max-height * $ratio;
+    
+    &:before{
+      //padding fot he height the element in right aspect ratio
+      padding-top: 100% / $ratio;
+    }
+
+    //demo-image  
+    background-image: url("http://lorempixel.com/"+round(200 * $ratio)+"/200/food");
+  } 
+}
+
+// generate classes
+@include flex-element(4,3);
+@include flex-element(3,4);
+@include flex-element(1,1);
+@include flex-element(2,1);
+@include flex-element(1,2);
+@include flex-element(3,1);
+@include flex-element(1,3);
+
+
+
