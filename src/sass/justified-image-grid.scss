@@ -1,14 +1,70 @@
 @import "flex";
+@import "compass";
 
-$line-min-height: 90px;
-$line-max-height: 180px;
+$container-class: "jig"!default;
+$min-angle: 18!default; 
+$max-angle: 70!default;
+$line-min-height: 60px!default;
+$line-max-height: 200px!default;
 
-//body {background: #f00;}
-//.flexboxlegacy body{background: #f60;}
-//.flexbox body{background: #f0f;} 
+//===========================================
+// function calculated ratio from given angle
+//===========================================
+
+@function ratioFromAngle($deg){
+  $height : 100000;
+  $width: 10000;
+  @if unitless($deg){
+    $width: $height*tan($deg*(pi()/180));
+  } @else {
+    $width: $height*tan($deg);
+  };
+  $ratio: $height/$width;
+  @return $ratio;
+}
 
 
-.flex{
+//============================================
+// Mixins to calculate values fpr JIG-Elements
+//============================================
+
+@mixin jig-element($ratio){
+    //flex grow set to ratio to defive the with of the element
+    @include flex-grow($ratio);
+    //flex-basis is needed to cause elements to wrap
+    @include flex-basis($line-min-height * $ratio);
+    //restrict maximum scale to avoid giants
+    max-height:$line-max-height;
+    max-width: $line-max-height * $ratio;
+    &:before{
+      //padding fot he height the element in right aspect ratio
+      padding-top: 100% / $ratio;
+    }
+}
+
+@mixin jig-ratio($width:1,$height:1){
+  //calculate the ratio
+  $ratio :   $width / $height ;
+  // class-name containing with and height
+  .#{$container-class}-#{$width}by#{$height}{
+    @include jig-element($ratio);
+  } 
+}
+
+@mixin jig-angle($angle:45,$ratio:1){
+  //calculate the ratio
+  $ratio : ratioFromAngle($angle) ;
+  // class-name containing angle
+  .#{$container-class}-#{$angle}{
+    @include jig-element($ratio);
+  } 
+}
+
+//===========================================
+// Settings for JIG-Container and JIG-Element
+//===========================================
+
+.#{$container-class}{
   //basic styling
   background: #ddd;
   padding:5px;
@@ -19,11 +75,10 @@ $line-max-height: 180px;
   @include justify-content(flex-start);
 }
 
-%flex-element{
+%jig-element{
   margin: 5px;
   background-color:#efefef;
   background-size:cover;
-  
   //generated content for aspect ratio 
   position:relative;
   &:before{
@@ -32,42 +87,44 @@ $line-max-height: 180px;
   }
 }
 
-
-@mixin flex-element($width:1,$height:1){
-  //calculate the ratio
-  $ratio :   $width / $height ;
-  // class-name containing with and height
-  .flex-#{$width}by#{$height}{
-    @extend %flex-element;
-    
-    //flex grow set to ratio to defive the with of the element
-    @include flex-grow($ratio);
-
-    //flex-basis is needed to cause elements to wrap
-    @include flex-basis($line-min-height * $ratio);
-    
-    //restrict maximum scale to avoid giants
-    max-height:$line-max-height;
-    max-width: $line-max-height * $ratio;
-    
-    &:before{
-      //padding fot he height the element in right aspect ratio
-      padding-top: 100% / $ratio;
-    }
-
-    //demo-image  
-    background-image: url("http://lorempixel.com/"+round(200 * $ratio)+"/200/food");
-  } 
+.#{$container-class}>[class^="#{$container-class}"]{
+  @extend %jig-element;
 }
 
-// generate classes
-@include flex-element(4,3);
-@include flex-element(3,4);
-@include flex-element(1,1);
-@include flex-element(2,1);
-@include flex-element(1,2);
-@include flex-element(3,1);
-@include flex-element(1,3);
+
+//=========================================
+// generate degree-classes
+//=========================================
+
+// classes from min to max
+@for $i from $min-angle through $max-angle {
+  @include jig-angle($i)
+}
+
+// extend classes lower or higher than min and max
+@for $angle from 1 through 89 {
+  @if($angle < $min-angle){
+      .#{$container-class}-#{$angle}{  @extend .#{$container-class}-#{$min-angle}};
+  }
+  @if($angle > $max-angle){
+      .#{$container-class}-#{$angle}{  @extend .#{$container-class}-#{$max-angle}};
+  }
+}
+
+
+//=========================================
+// generate custom-ratios
+//=========================================
+
+@include jig-ratio(1,1);
+@include jig-ratio(4,3);
+@include jig-ratio(3,4);
+@include jig-ratio(2,1);
+@include jig-ratio(1,2);
+@include jig-ratio(3,1);
+@include jig-ratio(1,3);
+
+
 
 
 
